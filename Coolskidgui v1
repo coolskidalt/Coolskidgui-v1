@@ -1,0 +1,142 @@
+-- coolskidgui v1 by coolskidalt
+local Players = game:GetService("Players")
+local Lighting = game:GetService("Lighting")
+local plr = Players.LocalPlayer
+
+-- Destroy old GUI if it exists
+pcall(function() plr.PlayerGui.coolskidgui_v1:Destroy() end)
+
+-- Create GUI
+local gui = Instance.new("ScreenGui", plr.PlayerGui)
+gui.Name = "coolskidgui_v1"
+gui.ResetOnSpawn = false
+
+-- Draggable Frame
+local main = Instance.new("Frame", gui)
+main.Name = "coolskidgui_frame"
+main.Size = UDim2.new(0, 300, 0, 420)
+main.Position = UDim2.new(0, 50, 0, 50)
+main.BackgroundColor3 = Color3.fromRGB(85, 0, 170) -- purple background
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+
+-- Title Bar
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundColor3 = Color3.fromRGB(60, 0, 120) -- darker purple
+title.Text = "coolskidgui v1"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 20
+title.BorderSizePixel = 0
+
+-- Layout
+local layout = Instance.new("UIListLayout", main)
+layout.Padding = UDim.new(0, 5)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- Spacer after title
+local pad = Instance.new("Frame", main)
+pad.Size = UDim2.new(1, 0, 0, 5)
+pad.BackgroundTransparency = 1
+
+-- Button Generator
+local function makeButton(text, callback)
+	local btn = Instance.new("TextButton", main)
+	btn.Size = UDim2.new(1, -10, 0, 40)
+	btn.BackgroundColor3 = Color3.fromRGB(120, 0, 180) -- purple-ish button
+	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+	btn.Font = Enum.Font.SourceSans
+	btn.TextSize = 18
+	btn.Text = text
+	btn.AutoButtonColor = true
+	btn.MouseButton1Click:Connect(callback)
+	return btn
+end
+
+-- Spam Decals
+makeButton("🖼️ Spam Decals", function()
+	local decalId = "rbxassetid://130219205261439"
+	local faces = {
+		Enum.NormalId.Front, Enum.NormalId.Back,
+		Enum.NormalId.Left, Enum.NormalId.Right,
+		Enum.NormalId.Top, Enum.NormalId.Bottom
+	}
+	for _, part in pairs(workspace:GetDescendants()) do
+		if part:IsA("BasePart") then
+			for _, face in pairs(faces) do
+				local decal = Instance.new("Decal")
+				decal.Texture = decalId
+				decal.Face = face
+				decal.Parent = part
+			end
+		end
+	end
+end)
+
+-- Change Skybox
+makeButton("🌌 Change Skybox", function()
+	local skyboxId = "rbxassetid://128498354402340"
+	local sky = Instance.new("Sky")
+	sky.SkyboxBk = skyboxId
+	sky.SkyboxDn = skyboxId
+	sky.SkyboxFt = skyboxId
+	sky.SkyboxLf = skyboxId
+	sky.SkyboxRt = skyboxId
+	sky.SkyboxUp = skyboxId
+	for _, obj in pairs(Lighting:GetChildren()) do
+		if obj:IsA("Sky") then obj:Destroy() end
+	end
+	sky.Parent = Lighting
+end)
+
+-- Play Music 1
+makeButton("🎵 Play Music 1", function()
+	local sound = Instance.new("Sound", workspace)
+	sound.SoundId = "rbxassetid://1847661821"
+	sound.Volume = 5
+	sound.Looped = true
+	sound:Play()
+end)
+
+-- Play Music 2
+makeButton("🎵 Play Music 2", function()
+	local sound = Instance.new("Sound", workspace)
+	sound.SoundId = "rbxassetid://102693468291710"
+	sound.Volume = 5
+	sound.Looped = true
+	sound:Play()
+end)
+
+-- Stop Music
+makeButton("🔇 Stop All Music", function()
+	for _, obj in pairs(workspace:GetChildren()) do
+		if obj:IsA("Sound") then
+			obj:Stop()
+			obj:Destroy()
+		end
+	end
+end)
+
+-- Teleport
+makeButton("🧍 Teleport to 'TeleportPart'", function()
+	local tp = workspace:FindFirstChild("TeleportPart")
+	if tp and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+		plr.Character.HumanoidRootPart.CFrame = tp.CFrame + Vector3.new(0, 5, 0)
+	end
+end)
+
+-- Kill All (Client)
+makeButton("☠️ Kill All (Client)", function()
+	for _, p in pairs(Players:GetPlayers()) do
+		if p.Character and p.Character:FindFirstChild("Humanoid") then
+			p.Character.Humanoid.Health = 0
+		end
+	end
+end)
+
+-- Self Destruct
+makeButton("💣 Self Destruct (Leave Game)", function()
+	plr:Kick("coolskidgui self destruct activated.")
+end)
