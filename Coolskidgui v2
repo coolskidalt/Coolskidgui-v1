@@ -1,20 +1,24 @@
--- coolskidgui v1 by coolskidalt
+-- coolskidgui v2 by coolskidalt
 local Players = game:GetService("Players")
 local Lighting = game:GetService("Lighting")
 local plr = Players.LocalPlayer
 
+-- Variables to store previous decal and skybox data for undo
+local previousDecals = {}
+local previousSkybox = nil
+
 -- Destroy old GUI if it exists
-pcall(function() plr.PlayerGui.coolskidgui_v1:Destroy() end)
+pcall(function() plr.PlayerGui.coolskidgui_v2:Destroy() end)
 
 -- Create GUI
 local gui = Instance.new("ScreenGui", plr.PlayerGui)
-gui.Name = "coolskidgui_v1"
+gui.Name = "coolskidgui v2"  -- Set the GUI name here
 gui.ResetOnSpawn = false
 
 -- Draggable Frame
 local main = Instance.new("Frame", gui)
 main.Name = "coolskidgui_frame"
-main.Size = UDim2.new(0, 300, 0, 420)
+main.Size = UDim2.new(0, 300, 0, 500)  -- Adjusted size for better fit
 main.Position = UDim2.new(0, 50, 0, 50)
 main.BackgroundColor3 = Color3.fromRGB(85, 0, 170) -- purple background
 main.BorderSizePixel = 0
@@ -25,7 +29,7 @@ main.Draggable = true
 local title = Instance.new("TextLabel", main)
 title.Size = UDim2.new(1, 0, 0, 40)
 title.BackgroundColor3 = Color3.fromRGB(60, 0, 120) -- darker purple
-title.Text = "coolskidgui v1"
+title.Text = "coolskidgui v2"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 20
@@ -63,9 +67,15 @@ makeButton("🖼️ Spam Decals", function()
 		Enum.NormalId.Left, Enum.NormalId.Right,
 		Enum.NormalId.Top, Enum.NormalId.Bottom
 	}
+	-- Store existing decals for undo
 	for _, part in pairs(workspace:GetDescendants()) do
 		if part:IsA("BasePart") then
 			for _, face in pairs(faces) do
+				for _, decal in pairs(part:GetChildren()) do
+					if decal:IsA("Decal") then
+						table.insert(previousDecals, decal)
+					end
+				end
 				local decal = Instance.new("Decal")
 				decal.Texture = decalId
 				decal.Face = face
@@ -85,10 +95,29 @@ makeButton("🌌 Change Skybox", function()
 	sky.SkyboxLf = skyboxId
 	sky.SkyboxRt = skyboxId
 	sky.SkyboxUp = skyboxId
+	-- Store existing skybox for undo
 	for _, obj in pairs(Lighting:GetChildren()) do
-		if obj:IsA("Sky") then obj:Destroy() end
+		if obj:IsA("Sky") then
+			previousSkybox = obj
+			obj:Destroy()
+		end
 	end
 	sky.Parent = Lighting
+end)
+
+-- Undo button
+makeButton("↩️ Undo Last Action", function()
+	-- Undo Spam Decals
+	for _, decal in pairs(previousDecals) do
+		decal:Destroy()
+	end
+	previousDecals = {}
+
+	-- Undo Skybox Change
+	if previousSkybox then
+		previousSkybox.Parent = Lighting
+		previousSkybox = nil
+	end
 end)
 
 -- Play Music 1
@@ -139,4 +168,49 @@ end)
 -- Self Destruct
 makeButton("💣 Self Destruct (Leave Game)", function()
 	plr:Kick("coolskidgui self destruct activated.")
+end)
+
+-- RGB Effect (Color Changing Character)
+makeButton("🌈 RGB Effect", function()
+	while true do
+		if plr.Character and plr.Character:FindFirstChild("Head") then
+			local colors = {Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 0, 255)}
+			for _, part in pairs(plr.Character:GetChildren()) do
+				if part:IsA("BasePart") then
+					part.Color = colors[math.random(1, #colors)]
+				end
+			end
+		end
+		wait(1)
+	end
+end)
+
+-- Walking Trail (Dot-like)
+local function createWalkingTrail()
+	local trailPart = Instance.new("Part")
+	trailPart.Size = Vector3.new(1, 0.2, 1)
+	trailPart.Anchored = true
+	trailPart.CanCollide = false
+	trailPart.Color = Color3.fromRGB(60, 0, 120) -- Dark purple trail color
+	trailPart.Material = Enum.Material.SmoothPlastic
+	trailPart.Parent = workspace
+	
+	local function createDot()
+		local dot = trailPart:Clone()
+		dot.CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, -2, 0)  -- Positioning the dot below the character
+		dot.Parent = workspace
+		
+		-- Remove the dot after some time (1 second)
+		game:GetService("Debris"):AddItem(dot, 1)
+	end
+
+	-- Make the trail follow the player
+	while plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") do
+		createDot()
+		wait(0.2) -- Creates the dots at intervals
+	end
+end
+
+makeButton("🌟 Activate Walking Trail (Dot-like)", function()
+	createWalkingTrail()
 end)
