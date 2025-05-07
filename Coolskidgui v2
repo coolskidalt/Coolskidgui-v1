@@ -1,81 +1,79 @@
 -- coolskidgui v2 by coolskidalt
+if not game:IsLoaded() then game.Loaded:Wait() end
 local Players = game:GetService("Players")
 local Lighting = game:GetService("Lighting")
 local plr = Players.LocalPlayer
-
--- Variables to store previous decal and skybox data for undo
-local previousDecals = {}
-local previousSkybox = nil
+repeat wait() until plr and plr:FindFirstChild("PlayerGui")
 
 -- Destroy old GUI if it exists
-pcall(function() plr.PlayerGui.coolskidgui_v2:Destroy() end)
+pcall(function() plr.PlayerGui:FindFirstChild("coolskidgui_v2"):Destroy() end)
 
 -- Create GUI
-local gui = Instance.new("ScreenGui", plr.PlayerGui)
-gui.Name = "coolskidgui v2"  -- Set the GUI name here
+local gui = Instance.new("ScreenGui")
+gui.Name = "coolskidgui_v2"
 gui.ResetOnSpawn = false
+gui.Parent = plr:WaitForChild("PlayerGui")
 
--- Draggable Frame
-local main = Instance.new("Frame", gui)
-main.Name = "coolskidgui_frame"
-main.Size = UDim2.new(0, 300, 0, 500)  -- Adjusted size for better fit
+-- Main Frame
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 320, 0, 400)
 main.Position = UDim2.new(0, 50, 0, 50)
-main.BackgroundColor3 = Color3.fromRGB(85, 0, 170) -- purple background
+main.BackgroundColor3 = Color3.fromRGB(85, 0, 170)
 main.BorderSizePixel = 0
 main.Active = true
 main.Draggable = true
+main.Parent = gui
 
 -- Title Bar
-local title = Instance.new("TextLabel", main)
+local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundColor3 = Color3.fromRGB(60, 0, 120) -- darker purple
-title.Text = "coolskidgui v2"
+title.BackgroundColor3 = Color3.fromRGB(60, 0, 120)
+title.Text = "coolskidgui v2 by coolskidalt"
 title.TextColor3 = Color3.fromRGB(255, 255, 255)
 title.Font = Enum.Font.SourceSansBold
 title.TextSize = 20
-title.BorderSizePixel = 0
+title.Parent = main
+
+-- Scrolling container
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(1, 0, 1, -40)
+scroll.Position = UDim2.new(0, 0, 0, 40)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 1000)
+scroll.ScrollBarThickness = 8
+scroll.BackgroundTransparency = 1
+scroll.Parent = main
 
 -- Layout
-local layout = Instance.new("UIListLayout", main)
+local layout = Instance.new("UIListLayout")
 layout.Padding = UDim.new(0, 5)
 layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Parent = scroll
 
--- Spacer after title
-local pad = Instance.new("Frame", main)
-pad.Size = UDim2.new(1, 0, 0, 5)
-pad.BackgroundTransparency = 1
-
--- Button Generator
+-- Button Factory
 local function makeButton(text, callback)
-	local btn = Instance.new("TextButton", main)
+	local btn = Instance.new("TextButton")
 	btn.Size = UDim2.new(1, -10, 0, 40)
-	btn.BackgroundColor3 = Color3.fromRGB(120, 0, 180) -- purple-ish button
+	btn.BackgroundColor3 = Color3.fromRGB(120, 0, 180)
 	btn.TextColor3 = Color3.fromRGB(255, 255, 255)
 	btn.Font = Enum.Font.SourceSans
 	btn.TextSize = 18
 	btn.Text = text
 	btn.AutoButtonColor = true
 	btn.MouseButton1Click:Connect(callback)
+	btn.Parent = scroll
 	return btn
 end
 
--- Spam Decals
+-- Functions
+local previousSkybox = nil
+local previousDecals = {}
+
 makeButton("🖼️ Spam Decals", function()
 	local decalId = "rbxassetid://130219205261439"
-	local faces = {
-		Enum.NormalId.Front, Enum.NormalId.Back,
-		Enum.NormalId.Left, Enum.NormalId.Right,
-		Enum.NormalId.Top, Enum.NormalId.Bottom
-	}
-	-- Store existing decals for undo
+	local faces = {Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right, Enum.NormalId.Top, Enum.NormalId.Bottom}
 	for _, part in pairs(workspace:GetDescendants()) do
 		if part:IsA("BasePart") then
 			for _, face in pairs(faces) do
-				for _, decal in pairs(part:GetChildren()) do
-					if decal:IsA("Decal") then
-						table.insert(previousDecals, decal)
-					end
-				end
 				local decal = Instance.new("Decal")
 				decal.Texture = decalId
 				decal.Face = face
@@ -85,42 +83,21 @@ makeButton("🖼️ Spam Decals", function()
 	end
 end)
 
--- Change Skybox
 makeButton("🌌 Change Skybox", function()
-	local skyboxId = "rbxassetid://128498354402340"
-	local sky = Instance.new("Sky")
-	sky.SkyboxBk = skyboxId
-	sky.SkyboxDn = skyboxId
-	sky.SkyboxFt = skyboxId
-	sky.SkyboxLf = skyboxId
-	sky.SkyboxRt = skyboxId
-	sky.SkyboxUp = skyboxId
-	-- Store existing skybox for undo
-	for _, obj in pairs(Lighting:GetChildren()) do
-		if obj:IsA("Sky") then
-			previousSkybox = obj
-			obj:Destroy()
-		end
+	local id = "rbxassetid://128498354402340"
+	for _, s in ipairs(Lighting:GetChildren()) do
+		if s:IsA("Sky") then s:Destroy() end
 	end
+	local sky = Instance.new("Sky")
+	sky.SkyboxBk = id
+	sky.SkyboxDn = id
+	sky.SkyboxFt = id
+	sky.SkyboxLf = id
+	sky.SkyboxRt = id
+	sky.SkyboxUp = id
 	sky.Parent = Lighting
 end)
 
--- Undo button
-makeButton("↩️ Undo Last Action", function()
-	-- Undo Spam Decals
-	for _, decal in pairs(previousDecals) do
-		decal:Destroy()
-	end
-	previousDecals = {}
-
-	-- Undo Skybox Change
-	if previousSkybox then
-		previousSkybox.Parent = Lighting
-		previousSkybox = nil
-	end
-end)
-
--- Play Music 1
 makeButton("🎵 Play Music 1", function()
 	local sound = Instance.new("Sound", workspace)
 	sound.SoundId = "rbxassetid://1847661821"
@@ -129,7 +106,6 @@ makeButton("🎵 Play Music 1", function()
 	sound:Play()
 end)
 
--- Play Music 2
 makeButton("🎵 Play Music 2", function()
 	local sound = Instance.new("Sound", workspace)
 	sound.SoundId = "rbxassetid://102693468291710"
@@ -138,7 +114,6 @@ makeButton("🎵 Play Music 2", function()
 	sound:Play()
 end)
 
--- Stop Music
 makeButton("🔇 Stop All Music", function()
 	for _, obj in pairs(workspace:GetChildren()) do
 		if obj:IsA("Sound") then
@@ -148,7 +123,6 @@ makeButton("🔇 Stop All Music", function()
 	end
 end)
 
--- Teleport
 makeButton("🧍 Teleport to 'TeleportPart'", function()
 	local tp = workspace:FindFirstChild("TeleportPart")
 	if tp and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
@@ -156,7 +130,6 @@ makeButton("🧍 Teleport to 'TeleportPart'", function()
 	end
 end)
 
--- Kill All (Client)
 makeButton("☠️ Kill All (Client)", function()
 	for _, p in pairs(Players:GetPlayers()) do
 		if p.Character and p.Character:FindFirstChild("Humanoid") then
@@ -165,52 +138,69 @@ makeButton("☠️ Kill All (Client)", function()
 	end
 end)
 
--- Self Destruct
 makeButton("💣 Self Destruct (Leave Game)", function()
 	plr:Kick("coolskidgui self destruct activated.")
 end)
 
--- RGB Effect (Color Changing Character)
 makeButton("🌈 RGB Effect", function()
-	while true do
-		if plr.Character and plr.Character:FindFirstChild("Head") then
-			local colors = {Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 255, 0), Color3.fromRGB(0, 0, 255)}
-			for _, part in pairs(plr.Character:GetChildren()) do
-				if part:IsA("BasePart") then
-					part.Color = colors[math.random(1, #colors)]
+	spawn(function()
+		while true do
+			if plr.Character then
+				for _, part in pairs(plr.Character:GetChildren()) do
+					if part:IsA("BasePart") then
+						part.Color = Color3.fromRGB(math.random(255), math.random(255), math.random(255))
+					end
 				end
 			end
+			wait(0.5)
 		end
-		wait(1)
+	end)
+end)
+
+makeButton("🌟 Activate Walking Trail", function()
+	spawn(function()
+		local trailPart = Instance.new("Part")
+		trailPart.Size = Vector3.new(1, 0.2, 1)
+		trailPart.Anchored = true
+		trailPart.CanCollide = false
+		trailPart.Color = Color3.fromRGB(120, 0, 180)
+		trailPart.Material = Enum.Material.SmoothPlastic
+		while plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") do
+			local dot = trailPart:Clone()
+			dot.CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, -3, 0)
+			dot.Parent = workspace
+			game:GetService("Debris"):AddItem(dot, 1)
+			wait(0.2)
+		end
+	end)
+end)
+
+makeButton("🔥 Spinbot", function()
+	spawn(function()
+		while plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") do
+			plr.Character.HumanoidRootPart.CFrame *= CFrame.Angles(0, math.rad(15), 0)
+			wait(0.1)
+		end
+	end)
+end)
+
+makeButton("💨 Speed Hack", function()
+	if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+		plr.Character.Humanoid.WalkSpeed = 100
 	end
 end)
 
--- Walking Trail (Dot-like)
-local function createWalkingTrail()
-	local trailPart = Instance.new("Part")
-	trailPart.Size = Vector3.new(1, 0.2, 1)
-	trailPart.Anchored = true
-	trailPart.CanCollide = false
-	trailPart.Color = Color3.fromRGB(60, 0, 120) -- Dark purple trail color
-	trailPart.Material = Enum.Material.SmoothPlastic
-	trailPart.Parent = workspace
-	
-	local function createDot()
-		local dot = trailPart:Clone()
-		dot.CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, -2, 0)  -- Positioning the dot below the character
-		dot.Parent = workspace
-		
-		-- Remove the dot after some time (1 second)
-		game:GetService("Debris"):AddItem(dot, 1)
+makeButton("🛑 Reset Speed", function()
+	if plr.Character and plr.Character:FindFirstChild("Humanoid") then
+		plr.Character.Humanoid.WalkSpeed = 16
 	end
+end)
 
-	-- Make the trail follow the player
-	while plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") do
-		createDot()
-		wait(0.2) -- Creates the dots at intervals
-	end
-end
-
-makeButton("🌟 Activate Walking Trail (Dot-like)", function()
-	createWalkingTrail()
+makeButton("📢 Chat Spam", function()
+	spawn(function()
+		while true do
+			game.ReplicatedStorage.DefaultChatSystemChatEvents.SayMessageRequest:FireServer("coolskidgui v2 on top", "All")
+			wait(1)
+		end
+	end)
 end)
